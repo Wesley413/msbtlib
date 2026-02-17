@@ -1,0 +1,10 @@
+[project]
+name = "msbtlib"
+version = "0.1.0"
+description = "A Python library for parsing and editing MSBT files."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pytest>=9.0.2",
+    "pytest-watch>=4.2.0",
+]
