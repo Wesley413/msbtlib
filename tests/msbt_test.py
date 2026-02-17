@@ -3,9 +3,6 @@ from msbtlib.msbt_writer import MsbtWrite
 import hashlib
 
 def test_msbt_integrity():
-
-    
-
     result = Msbt.from_msbt("./tests/data/example.msbt")
     output = MsbtWrite(result).get_output()
 

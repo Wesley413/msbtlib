@@ -26,20 +26,18 @@ class MsbtLbl1:
     self.labels = labels
 
 class MsbtAtr1:
-  def __init__(self, block_type: str, block_size: int, block_padding: bytes, block_data, number_atributes: int, bytes_per_atributes: int) -> None:
+  def __init__(self, block_type: str, block_size: int, block_padding: bytes, number_atributes: int, bytes_per_atributes: int) -> None:
     self.block_type = block_type
     self.block_size = block_size
     self.block_padding = block_padding
-    self.block_data = block_data
     self.number_atributes = number_atributes
     self.bytes_per_atributes = bytes_per_atributes
 
 class MsbtTxt2:
-  def __init__(self, block_type: str, block_size: int, block_padding: bytes, block_data, texts: list) -> None:
+  def __init__(self, block_type: str, block_size: int, block_padding: bytes, texts: list) -> None:
     self.block_type = block_type
     self.block_size = block_size
     self.block_padding = block_padding
-    self.block_data = block_data
     self.texts = texts
 
 class Text:

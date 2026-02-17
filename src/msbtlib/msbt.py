@@ -33,12 +33,9 @@ class Msbt:
     filesize = unsigned_int.unpack(msbt_file.read(4))[0]
     padding = msbt_file.read(10)
 
-    print(f"encoding: {encoding}")
-    print(endianness)
     if magic != "MsgStdBn":
       raise Exception("Invalid MSBT file")
     elif endianness != 'fffe':
-      print("big endian")
       raise Exception("Big Endian Not Implemented")
 
     # TODO: REFACTOR <
@@ -60,14 +57,8 @@ class Msbt:
       elif block_type == b'ATR1':
         block_offset = self._parse_art1(msbt_file, block_offset)
       else:
-        print("end?")
         break
 
-    # for label in self.lbl1.labels:
-    #   # print(label["label_index"])
-    #   # print(self.txt2.texts)
-    #   print(label["label_string"], self.txt2.texts[label["label_index"]])
-    #   print()
 
   
 
@@ -82,24 +73,21 @@ class Msbt:
     raw_block_size = reader.read(4)
     block_size = struct.unpack("<I", raw_block_size)[0]
     padding = reader.read(8)
-    block_data = reader.read(block_size) # TODO: MAYBE SHOULD BE REMOVED
 
     reader.seek(-block_size, 1)
     
-    return block_type, block_size, padding, block_data, reader.tell()
+    return block_type, block_size, padding, reader.tell()
 
   def _parse_txt2(self, reader: BufferedReader, offset: int) -> int:
-    block_type, block_size, padding, block_data, offset = self._parse_block_header(reader, offset)
+    block_type, block_size, padding, offset = self._parse_block_header(reader, offset)
     
     message_number = struct.unpack("<I", reader.read(4))[0]
-    print("TOTAL MESSAGE: ", message_number)
 
     texts = []
 
     for _ in range(0, message_number):
       messages = []
       message_offset = struct.unpack("<I", reader.read(4))[0]
-      print("OFFSET: ", message_offset)
       local_offset = reader.tell()
       message = b""
       reader.seek(message_offset + offset)
@@ -111,8 +99,6 @@ class Msbt:
           if message != b"":
             messages.append(Text(message.decode("utf-16")))
           break
-        elif char == b"":
-          raise Exception("SOMETHING IS WRONG") # TODO: REMOVE THIS
         elif char == b"\x0E\x00":
           if message != b"":
             messages.append(Text(message.decode("utf-16")))
@@ -131,7 +117,7 @@ class Msbt:
       last_offset = reader.tell()
       reader.seek(local_offset)
 
-    self.txt2 = MsbtTxt2(block_type, block_size, padding, block_data, texts)
+    self.txt2 = MsbtTxt2(block_type, block_size, padding, texts)
 
     print(texts[0])
 
@@ -144,12 +130,12 @@ class Msbt:
   def _parse_art1(self, reader: BufferedReader, offset: int) -> int:
     # TODO: NOT WELL IMPLEMENTED YET
     # TODO: BAD IMPLEMENTATION
-    block_type, block_size, padding, block_data, offset = self._parse_block_header(reader, offset)
+    block_type, block_size, padding, offset = self._parse_block_header(reader, offset)
 
     number_atributes = struct.unpack("<I", reader.read(4))[0]
     bytes_per_atributes = struct.unpack("<I", reader.read(4))[0]
 
-    self.atr1 = MsbtAtr1(block_type, block_size, padding, block_data, number_atributes, bytes_per_atributes)
+    self.atr1 = MsbtAtr1(block_type, block_size, padding, number_atributes, bytes_per_atributes)
 
     return reader.tell() + 8 # TODO: UNSTABLE
 
