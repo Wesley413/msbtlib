@@ -48,31 +48,31 @@ class MsbtWrite:
 
     struct.pack_into("<I", self.output.getbuffer(), filesize_offset, filesize)
 
-    # self.output.seek(0)
-    # self.output.seek(offset_old)
-    # print(self.output.read())
-    # self.output.seek(offset)
-    # print(hex(self.output.tell()))
-
-    # with open("test.msbt", "wb") as f:
-    #   self.output.seek(0)
-    #   f.write(self.output.read())
 
   def get_output(self) -> BytesIO:
     self.output.seek(0)
     return self.output
 
   @classmethod
-  def to_json(self, msbt: Msbt) -> None:
+  def to_json(self) -> None:
     raise Exception("Not Implemented")
 
-  @classmethod
-  def to_dict(self, msbt: Msbt) -> None:
-    raise Exception("Not Implemented")
+  # @classmethod
+  def to_dict(self) -> dict:
+    dict_msbt = dict()
+    
+    for atr, val in self.msbt.__dict__.items():
+      if hasattr(val, "to_dict"):
+        dict_msbt[atr] = val.to_dict()
+      else:
+        dict_msbt[atr] = val
+    
+    return dict_msbt
+    # raise Exception("Not Implemented")
 
 
   @classmethod
-  def to_yaml(self, msbt: Msbt) -> None:
+  def to_yaml(self) -> None:
     raise Exception("Not Implemented")
 
 
@@ -185,8 +185,6 @@ class MsbtWrite:
         )
       )
     
-    print(self.msbt.atr1.number_atributes)
-    
     self.align_block(output)
         
     return output.tell()
@@ -240,14 +238,12 @@ class MsbtWrite:
         
         elif type(element) is Text:
           current_offset += len(element.text.encode('utf-16-le')) # TODO: FIX THIS
-          # print(element.text)
 
           messages_bytes += element.text.encode('utf-16-le') # TODO: AND THIS AS WELL
 
 
       current_offset += len(b"\x00\x00")
       messages_bytes += b"\x00\x00"
-      # print(len(b"\x00\x00"))
 
     output.write(messages_offset_bytes + messages_bytes)
 

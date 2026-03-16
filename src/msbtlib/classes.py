@@ -14,6 +14,9 @@ class MsbtHeader:
     for var, val in vars(self).items():
       print(var, val)
 
+  def to_dict(self):
+    return self.__dict__
+
 
 
 class MsbtLbl1:
@@ -25,6 +28,9 @@ class MsbtLbl1:
     self.hash = hash
     self.labels = labels
 
+  def to_dict(self):
+    return self.__dict__
+
 class MsbtAtr1:
   def __init__(self, block_type: str, block_size: int, block_padding: bytes, number_atributes: int, bytes_per_atributes: int) -> None:
     self.block_type = block_type
@@ -33,12 +39,18 @@ class MsbtAtr1:
     self.number_atributes = number_atributes
     self.bytes_per_atributes = bytes_per_atributes
 
+  def to_dict(self):
+    return self.__dict__
+
 class MsbtTxt2:
   def __init__(self, block_type: str, block_size: int, block_padding: bytes, texts: list) -> None:
     self.block_type = block_type
     self.block_size = block_size
     self.block_padding = block_padding
     self.texts = texts
+
+  def to_dict(self):
+    return self.__dict__
 
 class Text:
   def __init__(self, text: str) -> None:
@@ -49,6 +61,9 @@ class Text:
   
   def __repr__(self):
     return self.__str__()
+  
+  def to_dict(self):
+    return self.__dict__
 
 class Command:
   def __init__(self, group_id: int, group_index: int, param_size: int, param: bytes) -> None:
@@ -62,3 +77,6 @@ class Command:
   
   def __repr__(self):
     return self.__str__()
+  
+  def to_dict(self):
+    return self.__dict__

@@ -12,3 +12,19 @@ def test_msbt_integrity():
     output_hash = hashlib.sha256(output.read())
 
     assert input_hash.hexdigest() == output_hash.hexdigest()
+
+def test_msbt_dict():
+    msbt = Msbt.from_msbt("./tests/data/example.msbt")
+
+    msbt_dict = MsbtWrite(msbt).to_dict()
+
+    with open("./tests/data/example.msbt", "rb") as f:
+        input_hash = hashlib.sha256(f.read())
+
+    msbt_from_dict = Msbt.from_dict(msbt_dict)
+
+    output = MsbtWrite(msbt_from_dict).get_output()
+
+    output_hash = hashlib.sha256(output.read())
+
+    assert input_hash.hexdigest() == output_hash.hexdigest()

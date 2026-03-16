@@ -3,6 +3,7 @@ from pathlib import Path
 import struct
 from io import BufferedReader, BytesIO
 from .classes import *
+from typing import Self
 
 class Msbt:
   # def __init__(self, header: MsbtHeader, lbl1: MsbtAtr1, atr1: MsbtAtr1, txt2: MsbtTxt2) -> None:
@@ -10,6 +11,13 @@ class Msbt:
   #   self.lbl1 = lbl1
   #   self.atr1 = atr1
   #   self.txt2 = txt2
+
+  def parse_from_dict(self, msbt_dict: dict):
+    self.header = MsbtHeader(**msbt_dict["header"])
+    self.lbl1 = MsbtLbl1(**msbt_dict["lbl1"])
+    self.atr1 = MsbtAtr1(**msbt_dict["atr1"])
+    self.txt2 = MsbtTxt2(**msbt_dict["txt2"])
+    pass
 
   def parse_from_msbt(self, msbt_file: BufferedReader):
     magic = msbt_file.read(8).decode("ascii")
@@ -41,14 +49,13 @@ class Msbt:
     # TODO: REFACTOR <
     self.header = MsbtHeader(magic, endianness, unknown1, encoding, version, number_blocks, unknown2, filesize, padding)
 
-    self.header.show_info()
+    # self.header.show_info()
 
     block_offset = msbt_file.tell()
 
     while filesize - msbt_file.tell() >= 4:
       msbt_file.seek(block_offset)
       block_type = msbt_file.read(4)
-      print(block_type)
       
       if block_type == b'LBL1':
         block_offset = self._parse_lbl1(msbt_file, block_offset)
@@ -73,8 +80,6 @@ class Msbt:
     raw_block_size = reader.read(4)
     block_size = struct.unpack("<I", raw_block_size)[0]
     padding = reader.read(8)
-
-    reader.seek(-block_size, 1)
     
     return block_type, block_size, padding, reader.tell()
 
@@ -118,12 +123,6 @@ class Msbt:
       reader.seek(local_offset)
 
     self.txt2 = MsbtTxt2(block_type, block_size, padding, texts)
-
-    print(texts[0])
-
-    self._show_hex_address(reader)
-
-
 
     return last_offset
 
@@ -211,3 +210,11 @@ class Msbt:
   @classmethod
   def from_json(cls, file_path: Union[str, Path]):
     pass
+
+  @classmethod
+  def from_dict(cls, msbt_dict: dict) -> Self:
+    # print(msbt_dict)
+    msbt = cls()
+    msbt.parse_from_dict(msbt_dict)
+    
+    return msbt

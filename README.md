@@ -8,7 +8,7 @@ Library for reading, writing, and converting MSBT files.
 - [x] Initial structure
 - [x] Basic parser
 - [x] Basic file writing support
-- [ ] Convert MSBT to dict
+- [X] Convert MSBT to dict
 - [ ] Convert MSBT to JSON
 - [ ] Documentation
 
