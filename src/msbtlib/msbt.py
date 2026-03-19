@@ -2,7 +2,8 @@ from typing import Union
 from pathlib import Path
 import struct
 from io import BufferedReader, BytesIO
-from .classes import *
+from .classes import MsbtHeader, MsbtLbl1, MsbtAtr1, MsbtTxt2, Text, Command
+from .utils import align_block_skip, skip
 from typing import Self
 
 class Msbt:
@@ -12,12 +13,56 @@ class Msbt:
   #   self.atr1 = atr1
   #   self.txt2 = txt2
 
+  def _deserialize_element(self, data: dict):
+    type_ = data.get("type")
+
+    if type_ == "text":
+
+      if "text" not in data:
+        raise ValueError("Missing 'text' field")
+      
+      return Text(data["text"])
+    if type_ == "command":
+
+      try:
+        param_bytes = bytes.fromhex(data["param"])
+      except ValueError as e:
+        raise ValueError(f"Invalid hex in command param: {data['param']}") from e
+      
+      return Command(
+        data["id"],
+        data["index"],
+        data["param_size"],
+        param_bytes
+      )
+    
+    raise ValueError(f"Unknown type: {type_}")
+
   def parse_from_dict(self, msbt_dict: dict):
+    header = msbt_dict["header"]
+    lbl1 = msbt_dict["lbl1"]
+    lbl1 = msbt_dict["atr1"]
+    txt2 = msbt_dict["txt2"]
+
     self.header = MsbtHeader(**msbt_dict["header"])
     self.lbl1 = MsbtLbl1(**msbt_dict["lbl1"])
     self.atr1 = MsbtAtr1(**msbt_dict["atr1"])
-    self.txt2 = MsbtTxt2(**msbt_dict["txt2"])
-    pass
+
+
+    if "texts" not in txt2:
+      raise ValueError("txt2.texts field missing")
+
+    texts = [
+      [self._deserialize_element(item) for item in full_text]
+      for full_text in txt2["texts"]
+    ]
+
+    self.txt2 = MsbtTxt2(
+      txt2["block_type"], 
+      txt2["block_size"], 
+      txt2["block_padding"], 
+      texts)
+    
 
   def parse_from_msbt(self, msbt_file: BufferedReader):
     magic = msbt_file.read(8).decode("ascii")
@@ -39,7 +84,7 @@ class Msbt:
     number_blocks = unsigned_short.unpack(msbt_file.read(2))[0]
     unknown2 = unsigned_short.unpack(msbt_file.read(2))[0]
     filesize = unsigned_int.unpack(msbt_file.read(4))[0]
-    padding = msbt_file.read(10)
+    padding = skip(msbt_file, 10)
 
     if magic != "MsgStdBn":
       raise Exception("Invalid MSBT file")
@@ -79,7 +124,7 @@ class Msbt:
     block_type = reader.read(4).decode("ascii")
     raw_block_size = reader.read(4)
     block_size = struct.unpack("<I", raw_block_size)[0]
-    padding = reader.read(8)
+    padding = skip(reader, 8)
     
     return block_type, block_size, padding, reader.tell()
 
@@ -136,24 +181,19 @@ class Msbt:
 
     self.atr1 = MsbtAtr1(block_type, block_size, padding, number_atributes, bytes_per_atributes)
 
-    return reader.tell() + 8 # TODO: UNSTABLE
+    return reader.tell() + align_block_skip(reader)
 
 
   def _parse_lbl1(self, reader: BufferedReader, offset: int) -> int:
     reader.seek(offset)
-    
-    block_type = reader.read(4).decode("ascii")
+    block_type, block_size, padding, offset = self._parse_block_header(reader, offset)
 
-    raw_block_size = reader.read(4)
-    block_size = struct.unpack("<I", raw_block_size)[0]
-
-    padding = reader.read(8)
     block_data = reader.read(block_size)
     hash_map, labels = self._parse_lbl1_block(BytesIO(block_data), block_size)
 
     self.lbl1 = MsbtLbl1(block_type, block_size, padding, hash_map, labels)
 
-    return reader.tell() + 7 # TODO: UNSTABLE
+    return reader.tell() + align_block_skip(reader)
 
 
     

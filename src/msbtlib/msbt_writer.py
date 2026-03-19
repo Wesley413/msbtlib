@@ -7,6 +7,7 @@ from .classes import *
 class MsbtWrite:
   def __init__(self, msbt: Msbt) -> None:
     self.msbt = msbt
+
     self.output = BytesIO()
 
     encode_type = str(self.msbt.header.encoding)
@@ -68,8 +69,6 @@ class MsbtWrite:
         dict_msbt[atr] = val
     
     return dict_msbt
-    # raise Exception("Not Implemented")
-
 
   @classmethod
   def to_yaml(self) -> None:
@@ -105,7 +104,9 @@ class MsbtWrite:
     filesize_offset = output.tell()
     output.write(b"\x00\x00\x00\x00") # filesize placeholder
 
-    output.write(self.msbt.header.padding)
+    output.write(self.msbt.header.padding * b"\x00")
+
+
 
     self.align_block(output)
 
@@ -120,26 +121,26 @@ class MsbtWrite:
       block_header_struct.pack(
         func.block_type.encode("ascii"),
         func.block_size,
-        func.block_padding
+        func.block_padding * b"\x00"
       )
     )
 
   def _lbl1_write(self, output: BytesIO, offset = 0) -> int:
     output.seek(offset)
-    self._block_header_write(output, self.msbt.lbl1)
+
+    buffer = BytesIO()
 
     number_of_buckets = int(self.msbt.lbl1.hash["number_of_buckets"])
     buckets = self.msbt.lbl1.hash["buckets"]
 
-
-    output.write(number_of_buckets.to_bytes(4, byteorder=self.endian))
+    buffer.write(number_of_buckets.to_bytes(4, byteorder=self.endian))
 
     bucket_struct = struct.Struct(
         self.endian_prefix + "I I"
     )
 
     for bucket in buckets:
-      output.write(
+      buffer.write(
         bucket_struct.pack(
           bucket["number_of_labels"],
           bucket["offset"]
@@ -154,13 +155,17 @@ class MsbtWrite:
         self.endian_prefix + f"B {label_len}s I"
       )
 
-      output.write(
+      buffer.write(
         label_struct.pack(
           len(label["label_string"]),
           label["label_string"].encode("ascii"),
           label["label_index"]
         )
       )
+
+    self.msbt.lbl1.block_size = len(buffer.getvalue())
+    self._block_header_write(output, self.msbt.lbl1)
+    output.write(buffer.getvalue())
 
     self.align_block(output)
 
@@ -169,8 +174,8 @@ class MsbtWrite:
   def _atr1_write(self, output: BytesIO, offset = 0):
     # TODO: BAD IMPLEMENTATION
     output.seek(offset)
-    self._block_header_write(output, self.msbt.atr1)
 
+    buffer = BytesIO()
 
     atributes_struct = struct.Struct(
       self.endian_prefix + "I I"
@@ -178,12 +183,16 @@ class MsbtWrite:
 
     number_atributes = len(self.msbt.txt2.texts)
 
-    output.write(
+    buffer.write(
       atributes_struct.pack(
         number_atributes,
         self.msbt.atr1.bytes_per_atributes
         )
       )
+    
+    self.msbt.atr1.block_size = len(buffer.getvalue())
+    self._block_header_write(output, self.msbt.atr1)
+    output.write(buffer.getvalue())
     
     self.align_block(output)
         
@@ -191,14 +200,15 @@ class MsbtWrite:
   
   def _txt2_write(self, output: BytesIO, offset = 0):
     output.seek(offset)
-    self._block_header_write(output, self.msbt.txt2)
+
+    buffer = BytesIO()
 
     texts_struct = struct.Struct(
       self.endian_prefix + "I"
     )
 
-    # TODO: POSSIVEL PROBLEMA
-    output.write(
+    # TODO: ISSUE
+    buffer.write(
       texts_struct.pack(
         len(self.msbt.txt2.texts)
       )
@@ -245,7 +255,11 @@ class MsbtWrite:
       current_offset += len(b"\x00\x00")
       messages_bytes += b"\x00\x00"
 
-    output.write(messages_offset_bytes + messages_bytes)
+    buffer.write(messages_offset_bytes + messages_bytes)
+
+    self.msbt.txt2.block_size = len(buffer.getvalue())
+    self._block_header_write(output, self.msbt.txt2)
+    output.write(buffer.getvalue())
 
     self.align_block(output)
 
