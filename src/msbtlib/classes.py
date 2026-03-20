@@ -74,7 +74,6 @@ class MsbtTxt2:
     for full_text in self.texts:
       full_text_list = []
       for text in full_text:
-        # print(text.to_dict())
         if hasattr(text, "to_dict"):
           full_text_list.append(text.to_dict())
         else:

@@ -3,6 +3,7 @@ from io import BytesIO
 from typing import Literal
 import struct
 from .classes import *
+import json
 
 class MsbtWrite:
   def __init__(self, msbt: Msbt) -> None:
@@ -54,9 +55,9 @@ class MsbtWrite:
     self.output.seek(0)
     return self.output
 
-  @classmethod
-  def to_json(self) -> None:
-    raise Exception("Not Implemented")
+  # @classmethod
+  def to_json(self) -> str:
+    return json.dumps(self.to_dict())
 
   # @classmethod
   def to_dict(self) -> dict:

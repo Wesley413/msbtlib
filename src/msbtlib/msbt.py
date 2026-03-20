@@ -5,6 +5,7 @@ from io import BufferedReader, BytesIO
 from .classes import MsbtHeader, MsbtLbl1, MsbtAtr1, MsbtTxt2, Text, Command
 from .utils import align_block_skip, skip
 from typing import Self
+import json
 
 class Msbt:
   # def __init__(self, header: MsbtHeader, lbl1: MsbtAtr1, atr1: MsbtAtr1, txt2: MsbtTxt2) -> None:
@@ -238,7 +239,7 @@ class Msbt:
 
 
   @classmethod
-  def from_msbt(cls, file_path: Union[str, Path]):
+  def from_msbt(cls, file_path: Union[str, Path]) -> Self:
     with open(file_path, "rb") as f:      
       msbt = cls()
       msbt.parse_from_msbt(f)
@@ -248,12 +249,14 @@ class Msbt:
      
   
   @classmethod
-  def from_json(cls, file_path: Union[str, Path]):
-    pass
+  def from_json(cls, json_data: str) -> Self:
+    msbt = cls()
+    msbt.parse_from_dict(json.loads(json_data))
+
+    return msbt
 
   @classmethod
   def from_dict(cls, msbt_dict: dict) -> Self:
-    # print(msbt_dict)
     msbt = cls()
     msbt.parse_from_dict(msbt_dict)
     
