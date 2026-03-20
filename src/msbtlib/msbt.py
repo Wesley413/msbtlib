@@ -92,7 +92,7 @@ class Msbt:
       raise Exception("Big Endian Not Implemented")
 
     # TODO: REFACTOR <
-    self.header = MsbtHeader(magic, endianness, unknown1, encoding, version, number_blocks, unknown2, filesize, padding)
+    self.header = MsbtHeader(magic, endianness, unknown1, encoding, version, number_blocks, unknown2, padding)
 
     # self.header.show_info()
 

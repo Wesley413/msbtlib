@@ -1,5 +1,5 @@
 class MsbtHeader:
-  def __init__(self, magic: str, endianness: str, unknown1: int, encoding: int, version: int, number_blocks: int, unknown2: int, filesize: int, padding: int) -> None:
+  def __init__(self, magic: str, endianness: str, unknown1: int, encoding: int, version: int, number_blocks: int, unknown2: int, padding: int) -> None:
     self.magic = magic
     self.endianness = endianness
     self.unknown1 = unknown1
@@ -7,7 +7,6 @@ class MsbtHeader:
     self.version = version
     self.number_blocks = number_blocks
     self.unknown2 = unknown2
-    self.filesize = filesize
     self.padding = padding
 
   def show_info(self):
@@ -23,7 +22,6 @@ class MsbtHeader:
       "version": self.version,
       "number_blocks": self.number_blocks,
       "unknown2": self.unknown2,
-      "filesize": self.filesize,
       "padding": self.padding
     }
 
