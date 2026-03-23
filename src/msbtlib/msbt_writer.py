@@ -5,6 +5,7 @@ import struct
 from .classes import *
 import json
 
+
 class MsbtWrite:
   def __init__(self, msbt: Msbt) -> None:
     self.msbt = msbt
@@ -57,7 +58,7 @@ class MsbtWrite:
 
   # @classmethod
   def to_json(self) -> str:
-    return json.dumps(self.to_dict())
+    return json.dumps(self.to_dict(), ensure_ascii=False)
 
   # @classmethod
   def to_dict(self) -> dict:
