@@ -61,6 +61,13 @@ class MsbtAtr1:
       "number_atributes": self.number_atributes,
       "bytes_per_atributes": self.bytes_per_atributes
     }
+  
+class MsbtAto1:
+  def __init__(self, block_type: str, block_size: int, block_padding: int, content: bytes) -> None:
+    self.block_type = block_type
+    self.block_size = block_size
+    self.block_padding = block_padding
+    self.content = content
 
 class MsbtTxt2:
   def __init__(self, block_type: str, block_size: int, block_padding: int, texts: list[list]) -> None:

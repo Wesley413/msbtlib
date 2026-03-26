@@ -2,18 +2,12 @@ from typing import Union
 from pathlib import Path
 import struct
 from io import BufferedReader, BytesIO
-from .classes import MsbtHeader, MsbtLbl1, MsbtAtr1, MsbtTxt2, Text, Command
+from .classes import MsbtHeader, MsbtLbl1, MsbtAtr1, MsbtTxt2, MsbtAto1, Text, Command
 from .utils import align_block_skip, skip
 from typing import Self
 import json
 
 class Msbt:
-  # def __init__(self, header: MsbtHeader, lbl1: MsbtAtr1, atr1: MsbtAtr1, txt2: MsbtTxt2) -> None:
-  #   self.header = header
-  #   self.lbl1 = lbl1
-  #   self.atr1 = atr1
-  #   self.txt2 = txt2
-
   def _deserialize_element(self, data: dict):
     type_ = data.get("type")
 
@@ -94,8 +88,7 @@ class Msbt:
 
     # TODO: REFACTOR <
     self.header = MsbtHeader(magic, endianness, unknown1, encoding, version, number_blocks, unknown2, padding)
-
-    # self.header.show_info()
+    
 
     block_offset = msbt_file.tell()
 
@@ -109,12 +102,10 @@ class Msbt:
         block_offset = self._parse_txt2(msbt_file, block_offset)
       elif block_type == b'ATR1':
         block_offset = self._parse_art1(msbt_file, block_offset)
+      elif block_type == b'ATO1':
+        block_offset = self._parse_ato1(msbt_file, block_offset)
       else:
         break
-
-
-  
-
 
   def _show_hex_address(self, reader: BufferedReader):
     print(f"Offset: 0x{reader.tell():08X}")
@@ -171,6 +162,14 @@ class Msbt:
     self.txt2 = MsbtTxt2(block_type, block_size, padding, texts)
 
     return last_offset
+  
+  def _parse_ato1(self, reader: BufferedReader, offset: int):
+    block_type, block_size, padding, offset = self._parse_block_header(reader, offset)
+    content = reader.read(block_size)
+
+    self.ato1 = MsbtAto1(block_type, block_size, padding, content)
+
+    return reader.tell() + align_block_skip(reader)
 
   def _parse_art1(self, reader: BufferedReader, offset: int) -> int:
     # TODO: NOT WELL IMPLEMENTED YET
@@ -230,8 +229,6 @@ class Msbt:
         "label_string": label_string,
         "label_index": label_index
       })
-
-
 
       remaning_bytes = block_size - reader.tell()
 
