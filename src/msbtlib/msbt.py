@@ -6,6 +6,7 @@ from .classes import MsbtHeader, MsbtLbl1, MsbtAtr1, MsbtTxt2, MsbtAto1, Text, C
 from .utils import align_block_skip, skip
 from typing import Self
 import json
+from pprint import pprint
 
 class Msbt:
   def _deserialize_element(self, data: dict):
@@ -172,14 +173,17 @@ class Msbt:
     return reader.tell() + align_block_skip(reader)
 
   def _parse_art1(self, reader: BufferedReader, offset: int) -> int:
-    # TODO: NOT WELL IMPLEMENTED YET
-    # TODO: BAD IMPLEMENTATION
     block_type, block_size, padding, offset = self._parse_block_header(reader, offset)
 
     number_atributes = struct.unpack("<I", reader.read(4))[0]
     bytes_per_atributes = struct.unpack("<I", reader.read(4))[0]
 
-    self.atr1 = MsbtAtr1(block_type, block_size, padding, number_atributes, bytes_per_atributes)
+    atributes = list()
+
+    for _ in range(0, number_atributes):
+      atributes.append(reader.read(bytes_per_atributes))
+
+    self.atr1 = MsbtAtr1(block_type, block_size, padding, number_atributes, bytes_per_atributes, atributes)
 
     return reader.tell() + align_block_skip(reader)
 

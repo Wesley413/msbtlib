@@ -46,20 +46,24 @@ class MsbtLbl1:
     }
 
 class MsbtAtr1:
-  def __init__(self, block_type: str, block_size: int, block_padding: int, number_atributes: int, bytes_per_atributes: int) -> None:
+  def __init__(self, block_type: str, block_size: int, block_padding: int, number_atributes: int, bytes_per_atributes: int, atributes: list[bytes]) -> None:
     self.block_type = block_type
     self.block_size = block_size
     self.block_padding = block_padding
     self.number_atributes = number_atributes
     self.bytes_per_atributes = bytes_per_atributes
+    self.atributes = atributes
 
   def to_dict(self):
+    atributes: list[str] = [atribute.hex() for atribute in self.atributes]
+
     return {
       "block_type": self.block_type,
       "block_size": self.block_size,
       "block_padding": self.block_padding,
       "number_atributes": self.number_atributes,
-      "bytes_per_atributes": self.bytes_per_atributes
+      "bytes_per_atributes": self.bytes_per_atributes,
+      "atributes": atributes
     }
   
 class MsbtAto1:
