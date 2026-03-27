@@ -2,7 +2,7 @@ from typing import Union
 from pathlib import Path
 import struct
 from io import BufferedReader, BytesIO
-from .classes import MsbtHeader, MsbtLbl1, MsbtAtr1, MsbtTxt2, MsbtAto1, Text, Command
+from .classes import MsbtHeader, MsbtLbl1, MsbtAtr1, MsbtTxt2, MsbtAto1, MsbtTsy1, Text, Command
 from .utils import align_block_skip, skip
 from typing import Self
 import json
@@ -96,13 +96,15 @@ class Msbt:
     while filesize - msbt_file.tell() >= 4:
       msbt_file.seek(block_offset)
       block_type = msbt_file.read(4)
-      
+
       if block_type == b'LBL1':
         block_offset = self._parse_lbl1(msbt_file, block_offset)
       elif block_type == b'TXT2':
         block_offset = self._parse_txt2(msbt_file, block_offset)
       elif block_type == b'ATR1':
         block_offset = self._parse_art1(msbt_file, block_offset)
+      elif block_type == b'TSY1':
+        block_offset = self._parse_tsy1(msbt_file, block_offset)
       elif block_type == b'ATO1':
         block_offset = self._parse_ato1(msbt_file, block_offset)
       else:
@@ -120,36 +122,70 @@ class Msbt:
     padding = skip(reader, 8)
     
     return block_type, block_size, padding, reader.tell()
+  
+  
 
   def _parse_txt2(self, reader: BufferedReader, offset: int) -> int:
     block_type, block_size, padding, offset = self._parse_block_header(reader, offset)
-    
+
+    # print(reader.tell())
+
+    # start_offset = reader.tell()
+
     message_number = struct.unpack("<I", reader.read(4))[0]
 
     texts = []
 
-    for _ in range(0, message_number):
+    # skip(reader, message_number * 4)
+    # print(reader.tell())
+
+    
+    def read_u16_or_default(reader, default=0xFFFF):
+      try:
+        data = reader.read(2)
+        if len(data) < 2:
+          return default
+        return struct.unpack("<H", data)[0]
+      except struct.error:
+        return default
+
+    for count in range(0, message_number):
+      print(f"\nMessage {count}")
       messages = []
       message_offset = struct.unpack("<I", reader.read(4))[0]
       local_offset = reader.tell()
+      message_offset_next = struct.unpack("<I", reader.read(4))[0]
+      
       message = b""
       reader.seek(message_offset + offset)
+      print(message_offset + offset)
       
-      while True:
-        char = reader.read(2)
+      content = BytesIO(reader.read(message_offset_next - message_offset))
+      print(content.read())
+      content.seek(0)
 
-        if char == b"\x00\x00":
+      while True:
+        char = content.read(2)
+
+        if char == b"\x00\x00" or char == b"":
           if message != b"":
             messages.append(Text(message.decode("utf-16")))
           break
-        elif char == b"\x0E\x00":
+        if char == b"\x0E\x00":
           if message != b"":
             messages.append(Text(message.decode("utf-16")))
             message = b""
-          tag_group_id = struct.unpack("<H", reader.read(2))[0]
-          tag_group_index = struct.unpack("<H", reader.read(2))[0]
-          parameter_size = struct.unpack("<H", reader.read(2))[0]
-          param = reader.read(parameter_size)
+          tag_group_id = read_u16_or_default(content)
+          tag_group_index = read_u16_or_default(content)
+          parameter_size = read_u16_or_default(content)
+
+          param = content.read(parameter_size)
+
+          # TODO: BAD IMPLEMENTATION
+          if b"\xAB" in param:
+            param = b''
+          
+          print(tag_group_id, tag_group_index, parameter_size, param)
           
           messages.append(Command(tag_group_id, tag_group_index, parameter_size, param))
         else:
@@ -162,6 +198,9 @@ class Msbt:
 
     self.txt2 = MsbtTxt2(block_type, block_size, padding, texts)
 
+    pprint(texts)
+    # breakpoint()
+
     return last_offset
   
   def _parse_ato1(self, reader: BufferedReader, offset: int):
@@ -171,19 +210,32 @@ class Msbt:
     self.ato1 = MsbtAto1(block_type, block_size, padding, content)
 
     return reader.tell() + align_block_skip(reader)
+  
+  def _parse_tsy1(self, reader: BufferedReader, offset: int) -> int:
+    block_type, block_size, padding, offset = self._parse_block_header(reader, offset)
+
+    styles = list()
+
+    for _ in range(0, int(block_size / 4)):
+      styles.append(reader.read(4))
+
+    self.tsy1 = MsbtTsy1(block_type, block_size, padding, styles)
+
+    return reader.tell() + align_block_skip(reader)
+    
 
   def _parse_art1(self, reader: BufferedReader, offset: int) -> int:
     block_type, block_size, padding, offset = self._parse_block_header(reader, offset)
 
-    number_atributes = struct.unpack("<I", reader.read(4))[0]
-    bytes_per_atributes = struct.unpack("<I", reader.read(4))[0]
+    number_attributes = struct.unpack("<I", reader.read(4))[0]
+    bytes_per_attributes = struct.unpack("<I", reader.read(4))[0]
 
-    atributes = list()
+    attributes = list()
 
-    for _ in range(0, number_atributes):
-      atributes.append(reader.read(bytes_per_atributes))
+    for _ in range(0, number_attributes):
+      attributes.append(reader.read(bytes_per_attributes))
 
-    self.atr1 = MsbtAtr1(block_type, block_size, padding, number_atributes, bytes_per_atributes, atributes)
+    self.atr1 = MsbtAtr1(block_type, block_size, padding, number_attributes, bytes_per_attributes, attributes)
 
     return reader.tell() + align_block_skip(reader)
 

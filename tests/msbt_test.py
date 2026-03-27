@@ -16,6 +16,8 @@ def test_msbt_integrity():
     result = Msbt.from_msbt("./tests/data/example.msbt")
     output = MsbtWrite(result).get_output()
 
+    
+
     msbt_integrity(output)
 
 def test_msbt_dict():

@@ -46,13 +46,13 @@ class MsbtLbl1:
     }
 
 class MsbtAtr1:
-  def __init__(self, block_type: str, block_size: int, block_padding: int, number_atributes: int, bytes_per_atributes: int, atributes: list[bytes]) -> None:
+  def __init__(self, block_type: str, block_size: int, block_padding: int, number_attributes: int, bytes_per_attributes: int, attributes: list[bytes]) -> None:
     self.block_type = block_type
     self.block_size = block_size
     self.block_padding = block_padding
-    self.number_atributes = number_atributes
-    self.bytes_per_atributes = bytes_per_atributes
-    self.atributes = atributes
+    self.number_atributes = number_attributes
+    self.bytes_per_atributes = bytes_per_attributes
+    self.atributes = attributes
 
   def to_dict(self):
     atributes: list[str] = [atribute.hex() for atribute in self.atributes]
@@ -61,9 +61,9 @@ class MsbtAtr1:
       "block_type": self.block_type,
       "block_size": self.block_size,
       "block_padding": self.block_padding,
-      "number_atributes": self.number_atributes,
-      "bytes_per_atributes": self.bytes_per_atributes,
-      "atributes": atributes
+      "number_attributes": self.number_atributes,
+      "bytes_per_attributes": self.bytes_per_atributes,
+      "attributes": atributes
     }
   
 class MsbtAto1:
@@ -72,6 +72,13 @@ class MsbtAto1:
     self.block_size = block_size
     self.block_padding = block_padding
     self.content = content
+
+class MsbtTsy1:
+  def __init__(self, block_type: str, block_size: int, block_padding: int, styles: list) -> None:
+    self.block_type = block_type
+    self.block_size = block_size
+    self.block_padding = block_padding
+    self.styles = styles
 
 class MsbtTxt2:
   def __init__(self, block_type: str, block_size: int, block_padding: int, texts: list[list]) -> None:
