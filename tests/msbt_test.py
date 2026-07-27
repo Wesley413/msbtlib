@@ -15,10 +15,15 @@ def test_return_file_header():
     b"MsgStdBn",
     b"\xff\xfe",
     b"\x00\x00",
-    0,
-    0,
-    0,
+    1,
+    1,
+    1,
     b"\x00\x00",
-    0)
+    10000)
 
   assert expected == read_file_header("./tests/data/example.msbt")
+
+def test_file_header_to_bytes():
+  excepted = b"MsgStdBn\xff\xfe\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+
+  assert excepted == FileHeader(b"MsgStdBn", b"\xff\xfe", b"\x00\x00", 0, 0, 0, b"\x00\x00", 0).to_bytes()
