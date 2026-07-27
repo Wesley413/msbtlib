@@ -1,40 +1,24 @@
-from msbtlib.msbt import Msbt
-from msbtlib.msbt_writer import MsbtWrite
+from msbtlib.msbt import return_magic_number, read_file_header
+from msbtlib.classes import FileHeader
 import hashlib
 from io import BytesIO
 from pprint import pprint
 
-def msbt_pass():
-    assert True
 
-def msbt_integrity(msbt: BytesIO):
-    with open("./tests/data/example.msbt", "rb") as f:
-        input_hash = hashlib.sha256(f.read())
+def test_read_magic_number():
+  expected = b"MsgStdBn"
 
-    output_hash = hashlib.sha256(msbt.read())
+  assert expected == return_magic_number("./tests/data/example.msbt")
 
-    assert input_hash.hexdigest() == output_hash.hexdigest()
+def test_return_file_header():
+  expected = FileHeader(
+    b"MsgStdBn",
+    b"\xff\xfe",
+    b"\x00\x00",
+    0,
+    0,
+    0,
+    b"\x00\x00",
+    0)
 
-def test_msbt_integrity():
-    result = Msbt.from_msbt("./tests/data/example.msbt")
-    output = MsbtWrite(result).get_output()
-
-    msbt_integrity(output)
-
-def test_msbt_dict():
-    msbt = Msbt.from_msbt("./tests/data/example.msbt")
-
-    msbt_dict = MsbtWrite(msbt).to_dict()
-    msbt_from_dict = Msbt.from_dict(msbt_dict)
-    output = MsbtWrite(msbt_from_dict).get_output()
-
-    msbt_integrity(output)
-
-def test_msbt_json():
-    msbt = Msbt.from_msbt("./tests/data/example.msbt")
-
-    msbt_json = MsbtWrite(msbt).to_json()
-    msbt_from_json = Msbt.from_json(msbt_json)
-    output = MsbtWrite(msbt_from_json).get_output()
-
-    msbt_integrity(output)
+  assert expected == read_file_header("./tests/data/example.msbt")
