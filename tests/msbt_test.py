@@ -4,6 +4,9 @@ import hashlib
 from io import BytesIO
 from pprint import pprint
 
+def msbt_pass():
+    assert True
+
 def msbt_integrity(msbt: BytesIO):
     with open("./tests/data/example.msbt", "rb") as f:
         input_hash = hashlib.sha256(f.read())
@@ -15,8 +18,6 @@ def msbt_integrity(msbt: BytesIO):
 def test_msbt_integrity():
     result = Msbt.from_msbt("./tests/data/example.msbt")
     output = MsbtWrite(result).get_output()
-
-    
 
     msbt_integrity(output)
 
