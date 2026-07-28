@@ -3,7 +3,7 @@ from io import BytesIO
 from pprint import pprint
 
 from msbtlib.classes import BlockHeader, FileHeader
-from msbtlib.msbt import read_block_header, read_file_header, return_magic_number
+from msbtlib.msbt import read_block_header, read_file_header, return_magic_number, read_file
 
 
 def test_read_magic_number():
@@ -27,7 +27,9 @@ def test_return_file_header():
   with open(file_path, "wb") as f:
     f.write(expected.to_bytes())
 
-  assert expected == read_file_header(file_path)
+  reader = read_file(file_path)
+
+  assert expected == read_file_header(reader)
 
 def test_read_block_header():
   file_path = "./tests/data/block_header.msbt"
@@ -39,7 +41,9 @@ def test_read_block_header():
   with open(file_path, "wb") as f:
     f.write(excepted.to_bytes())
 
-  assert excepted == read_block_header(file_path)
+  reader = read_file(file_path)
+
+  assert excepted == read_block_header(reader)
 
 def test_file_header_to_bytes():
   excepted = b"MsgStdBn\xff\xfe\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"

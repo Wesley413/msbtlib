@@ -1,10 +1,11 @@
 from msbtlib.classes import BlockHeader, FileHeader, ReaderBytes
 
 
-def read_file_header(file_path: str) -> FileHeader:
+def read_file(file_path: str, is_little: bool = True) -> ReaderBytes:
   with open (file_path, "rb") as f:
-    reader = ReaderBytes(f.read())
+    return ReaderBytes(f.read())
 
+def read_file_header(reader: ReaderBytes) -> FileHeader:
   magic_number = reader.read_bytes(8)
   endianness = reader.read_bytes(2)
 
@@ -22,10 +23,7 @@ def read_file_header(file_path: str) -> FileHeader:
     file_size=reader.read_u32()
   )
 
-def read_block_header(file_path: str, is_little: bool = True) -> BlockHeader:
-  with open(file_path, "rb") as f:
-    reader = ReaderBytes(f.read(), is_little)
-
+def read_block_header(reader: ReaderBytes) -> BlockHeader:
   return BlockHeader (
     block_type=reader.read_bytes(4),
     block_size=reader.read_u32()
