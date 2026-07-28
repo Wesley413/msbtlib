@@ -1,4 +1,4 @@
-from msbtlib.classes import FileHeader, ReaderBytes
+from msbtlib.classes import BlockHeader, FileHeader, ReaderBytes
 
 
 def read_file_header(file_path: str) -> FileHeader:
@@ -22,6 +22,14 @@ def read_file_header(file_path: str) -> FileHeader:
     file_size=reader.read_u32()
   )
 
+def read_block_header(file_path: str, is_little: bool = True) -> BlockHeader:
+  with open(file_path, "rb") as f:
+    reader = ReaderBytes(f.read(), is_little)
+
+  return BlockHeader (
+    block_type=reader.read_bytes(4),
+    block_size=reader.read_u32()
+  )
 
 
 def return_magic_number(file: str):

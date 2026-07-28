@@ -27,7 +27,22 @@ class FileHeader:
     writer.write_u16(self.number_of_blocks)
     writer.write_bytes(self.unknown_1)
     writer.write_u32(self.file_size)
-    
+    writer.align_bytes()
+
+    return writer.bytes()
+
+@dataclass
+class BlockHeader:
+  block_type: bytes
+  block_size: int
+
+  def to_bytes(self) -> bytes:
+    writer = WriterBytes()
+
+    writer.write_bytes(self.block_type)
+    writer.write_u32(self.block_size)
+    writer.align_bytes()
+
     return writer.bytes()
 
 class ReaderBytes:
@@ -59,6 +74,9 @@ class ReaderBytes:
   def set_endianness(self, is_little: bool):
     self.endian = "<" if is_little else ">"
 
+  def align_bytes(self, alignment: int = 16):
+    self.offset = (self.offset + alignment - 1) // alignment * alignment
+
 class WriterBytes:
   def __init__(self, is_little: bool = True) -> None:
     self.buffer = bytearray()
@@ -78,6 +96,11 @@ class WriterBytes:
 
   def set_endianness(self, is_little: bool):
     self.endian = "<" if is_little else ">"
+
+  def align_bytes(self, alignment: int = 16):
+    alignment = (len(self.buffer) + alignment - 1) // alignment * alignment
+    alignment = alignment - len(self.buffer)
+    self.buffer += b"\x00" * alignment
 
   def bytes(self) -> bytes:
     return bytes(self.buffer)
