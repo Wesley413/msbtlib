@@ -45,6 +45,14 @@ class BlockHeader:
 
     return writer.bytes()
 
+@dataclass
+class LBL1:
+  block_header: BlockHeader
+  num_buckets: int
+  hash_table: list[bytes]
+  labels: str
+
+
 class ReaderBytes:
   def __init__(self, data: bytes, is_little: bool = True) -> None:
     self.data = data
@@ -63,7 +71,7 @@ class ReaderBytes:
   
   def read_u32(self) -> int:
     value = struct.unpack_from(f"{self.endian}I", self.data, self.offset)[0]
-    self.offset += 2
+    self.offset += 4
     return value
 
   def read_bytes(self, n: int) -> bytes:
